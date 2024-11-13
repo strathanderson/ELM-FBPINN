@@ -1,3 +1,13 @@
+"""
+Functions that build training matrix, including boundary conditions, solve the system, and 
+build the resulting solution matrix to generate a solution.
+
+Functions:
+    generate_indices: Generates the indices for the non-zero entries in the pseudo-mass matrices according to the subdomain boundaries.
+    vectorized_matrix_entry: Vectorized function that computes the entries of the training matrix.
+    elmfbpinn: Main function that builds the training matrix, solves the system, and generates the solution matrix.
+"""
+
 import jax
 import jax.numpy as jnp
 import time

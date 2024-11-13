@@ -1,3 +1,8 @@
+"""
+Functions used to define the subdomain intervals, window functions, and POU functions
+"""
+
+
 import jax.numpy as jnp
 from utils import display_windows
 

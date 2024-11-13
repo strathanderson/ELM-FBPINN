@@ -1,3 +1,18 @@
+"""
+Various plotting functions for window and partition of unity functions. 
+Also includes plotting functions for the solution of the PDE.
+
+Functions:
+    plot_window_hat - Plots the window_hat function for each window.
+    plot_window_hat_dx - Plots the derivative of the window_hat function for each window.
+    plot_window_hat_dxx - Plots the second derivative of the window_hat function for each window.
+    plot_POU - Plots the partition of unity function for each window.
+    plot_POU_dx - Plots the derivative of the partition of unity function for each window.
+    plot_POU_dxx - Plots the second derivative of the partition of unity function for each window.
+    plot_solution - Plots the solution of the PDE and the function f(x).
+"""
+
+
 import jax
 import jax.numpy as jnp
 import numpy as np

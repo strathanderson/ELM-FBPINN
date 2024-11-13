@@ -1,3 +1,9 @@
+"""
+Various helper functions for displaying matrices, windows, and calculating loss values.
+"""
+
+
+
 import numpy as np
 import pandas as pd
 import jax.numpy as jnp

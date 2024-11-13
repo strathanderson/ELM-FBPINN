@@ -1,5 +1,15 @@
-import jax.numpy as jnp
+"""
+Functions for the activation functions and the neural network basis function and derivatives.
 
+Functions:
+    - tanh: Hyperbolic tangent activation function
+    - sin: Sine activation function
+    - phi: Neural network basis function
+    - phi_dx: Neural network basis function first derivative
+    - phi_dxx: Neural network basis function second derivative
+"""
+
+import jax.numpy as jnp
 
 #Activation functions
 def tanh(x):

@@ -1,5 +1,18 @@
 """
+Defines the problem-specific functions for the damped harmonic oscillator. 
 
+Requires some updating with regards to more flexible usage to allow alternative problems to be defined.
+
+Functions:
+    compute_M_entry_vmap: Computes the value of the matrix entry for the damped harmonic oscillator.
+    compute_u_value_vmap: Computes the value of the solution for the damped harmonic oscillator.
+    compute_du_value_vmap: Computes the value of the derivative of the solution for the damped harmonic oscillator.
+    
+    compute_u_value: Computes the value of the solution for the damped harmonic oscillator. Used for the boundary condition.
+    compute_du_value: Computes the value of the derivative of the solution for the damped harmonic oscillator. Used for the boundary condition.
+    
+    harm_u_exact: Computes the exact solution for the damped harmonic oscillator.
+    zero_RHS: Computes the right-hand side of the damped harmonic oscillator problem.
 """
 
 import jax

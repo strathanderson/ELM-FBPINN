@@ -61,7 +61,6 @@ def vectorized_matrix_entry(rows, columns,x_batch, J, C, weights, biases, xmins,
     return values
 
 #matrix builder
-#def vmap_compute_system_ODE_with_BCs_index(
 def elmfbpinn(
     RHS_func,
     u,
@@ -75,19 +74,22 @@ def elmfbpinn(
     width,
     sigma,
     title,
+    weights=None,
+    biases=None,
     lmda=1,
     plot_window=True,
 ):
 
     total_start_time = time.time()  # Start time for the entire function
 
-    # Generate the weights and biases
-    key = random.PRNGKey(0)
-    key, subkey = random.split(key)
-    weights = random.uniform(subkey, shape=(C,), minval=-R, maxval=R)
+    if weights is None:
+        # Generate the weights and biases
+        key = random.PRNGKey(0)
+        key, subkey = random.split(key)
+        weights = random.uniform(subkey, shape=(C,), minval=-R, maxval=R)
 
-    key, subkey = random.split(key)
-    biases = random.uniform(subkey, shape=(C,), minval=-R, maxval=R)
+        key, subkey = random.split(key)
+        biases = random.uniform(subkey, shape=(C,), minval=-R, maxval=R)
 
     xmins, xmaxs = initInterval(J, xmin, xmax, width=width)
 

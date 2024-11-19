@@ -5,7 +5,7 @@ Functions that use sparse solvers to solve the linear systems of equations
 from utils import calc_normalized_l1_loss
 import numpy as np
 import scipy.sparse as sp
-import scipy.sparse.linalg as splinalg
+import scipy.sparse.linalg as splinalg #jax
 import time
 
 

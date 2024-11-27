@@ -86,7 +86,7 @@ def elmfbpinn(
         # Generate the weights and biases
         key = random.PRNGKey(0)
         key, subkey = random.split(key)
-        weights = random.uniform(subkey, shape=(C,), minval=-R, maxval=R)
+        weights = random.uniform(subkey, shape=(C,), minval=-R, maxval=R) #shape=(C,) (32,)
 
         key, subkey = random.split(key)
         biases = random.uniform(subkey, shape=(C,), minval=-R, maxval=R)

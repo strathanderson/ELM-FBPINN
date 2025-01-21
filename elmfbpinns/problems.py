@@ -19,7 +19,7 @@ import jax
 import jax.numpy as jnp
 
 from windows import POU, POU_dx, POU_dxx
-from networks import phi, phi_dx, phi_dxx
+from networks import phi , phi_dx, phi_dxx
 
 #1D harmonic oscillator
 def compute_M_entry_vmap(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
@@ -36,6 +36,9 @@ def compute_M_entry_vmap(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
 
     mu = (xmins[j] + xmaxs[j]) / 2.0
     sd = (xmaxs[j] - xmins[j]) / 2.0
+    
+    # phi_dx = jax.grad(phi)
+    # phi_dxx = jax.grad(phi_dx)
 
     basis = phi(x, sigma, weights[c], biases[c], mu, sd)
     basis_dx = phi_dx(x, sigma_dx, weights[c], biases[c], mu, sd)
@@ -73,22 +76,25 @@ def compute_u_value_vmap(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
     return u
 
 
-def compute_du_value_vmap(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
+def compute_du_value_vmap(x, j, J, c, weights, biases, xmins, xmaxs, sigma,kyle):
     sigma, sigma_dx, sigma_dxx = sigma, jax.grad(sigma), jax.grad(jax.grad(sigma))
-
+    POU_derivative = jax.grad(POU)
     if J == 1:
         partition_dx = 0
         partition = 1
     else:
         partition = POU(x, j, xmins, xmaxs, J)
-        partition_dx = POU_dx(x, j, xmins, xmaxs, J)
+        partition_dx = POU_derivative(x, j, xmins, xmaxs, J)
 
     mu = (xmins[j] + xmaxs[j]) / 2.0
 
     sd = (xmaxs[j] - xmins[j]) / 2.0
 
     basis = phi(x, sigma, weights[c], biases[c], mu, sd)
-    basis_dx = phi_dx(x, sigma_dx, weights[c], biases[c], mu, sd)
+    phi_dx = jax.grad(phi)
+    basis_dx = phi_dx(x, sigma, weights[c], biases[c], mu, sd)
+    #print("Yes I changed")
+    #basis_dx = phi_dx(x, sigma_dx, weights[c], biases[c], mu, sd)
 
     u_t = partition_dx * basis + partition * basis_dx
 
@@ -113,25 +119,25 @@ def compute_u_value(x, l, j, J, c, weights, biases, xmins, xmaxs, sigma):
 
 
 def compute_du_value(x, l, j, J, c, weights, biases, xmins, xmaxs, sigma):
-
+    POU_derivative = jax.grad(POU)
     if J == 1:
         partition_dx = 0
         partition = 1
     else:
         partition = POU(x[l], j, xmins, xmaxs, J)
-        partition_dx = POU_dx(x[l], j, xmins, xmaxs, J)
+        partition_dx = POU_derivative(x[l], j, xmins, xmaxs, J)
 
     mu = (xmins[j] + xmaxs[j]) / 2.0
 
     sd = (xmaxs[j] - xmins[j]) / 2.0
     
-    sigma_dx = jax.grad(sigma)
+    #sigma_dx = jax.grad(sigma)
+    phi_derivative = jax.grad(phi)
 
     basis = phi(x[l], sigma, weights[c], biases[c], mu, sd)
-    basis_dx = phi_dx(x[l], sigma_dx, weights[c], biases[c], mu, sd)
+    basis_dx = phi_derivative(x[l], sigma, weights[c], biases[c], mu, sd)
 
     u_t = partition_dx * basis + partition * basis_dx
-
     return u_t
 
 # Damped Harmonic Oscillator parameters

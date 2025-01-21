@@ -21,6 +21,10 @@ from problems import compute_M_entry_vmap, compute_u_value_vmap, compute_du_valu
 from utils import calc_l1_loss
 from plotting import plot_solution, plot_window_hat
 
+# [1,64,56,128,32,1]
+
+# C - output basis functions
+
 def generate_indices(J, C, xmins, xmaxs, x):
     row_indices = []
     col_indices = []
@@ -59,6 +63,14 @@ def vectorized_matrix_entry(rows, columns,x_batch, J, C, weights, biases, xmins,
 
     values = jax.vmap(single_M_entry)(jnp.arange(rows.shape[0]))
     return values
+
+# layer = [1, 32, 32, 1]
+# params = initalise weights and biases [[1, 32, 32, 1]]
+# for i, (w,b) in enumerate(params):
+#     x = jnp.dot(x, w) + b
+#     if i != len(params) - 1:
+#         x = jnp.tanh(x)
+# layer  = [1 ,32, 1]
 
 #matrix builder
 def elmfbpinn(

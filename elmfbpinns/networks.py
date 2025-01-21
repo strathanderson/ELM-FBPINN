@@ -21,7 +21,7 @@ def sin(x):
     return jnp.sin(x)
 
 
-def phi(x, activation, weight, bias, mu, sd):
+def phi(x, activation, weight, bias, mu, sd): #x values [this doesnt't]
     x = activation(jnp.dot(x, weight) + bias)
     return x
 
@@ -32,6 +32,15 @@ def phi_dx(x, activation_dx, weight, bias, mu, sd):
 def phi_dxx(x, activation_dxx, weight, bias, mu, sd):
     x = jnp.dot(activation_dxx(jnp.dot(x, weight) + bias), jnp.square(weight))
     return x
+
+# def phi(x, activation, weights, biases, mu, sd):#xvalues #vmap over the weights and biases [this works with deep layers]
+#     x_normalized = (x - mu) / sd
+#     for weight, bias in zip(weights, biases):
+#         x_normalized = activation(jnp.dot(x_normalized, weight) + bias)
+#     return x_normalized
+
+# phi_dx = jax.grad(phi)
+
 
 def initWeightBiases(nNetworks, layer):
     params = []

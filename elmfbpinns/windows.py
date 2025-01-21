@@ -15,6 +15,19 @@ def initInterval(J, xmin, xmax, width=1.9, verbose=False):
         display_windows(xmins, xmaxs)
     return xmins, xmaxs
 
+def norm(mu, sd, x):
+    return (x-mu)/sd
+
+def unnorm(mu, sd, x):
+    return x*sd + mu
+
+def cosine(xmin, xmax, x):
+    mu, sd = (xmin+xmax)/2, (xmax-xmin)/2
+    ws = ((1+jnp.cos(jnp.pi*(x-mu)/sd))/2)**2
+    ws = jnp.heaviside(x-xmin,1)*jnp.heaviside(xmax-x,1)*ws
+    w = jnp.prod(ws, axis=0, keepdims=True)
+    return w
+
 # Window functions
 def window_hat(x, xmin, xmax):
     condition = jnp.logical_and(x >= xmin, x <= xmax)
@@ -55,6 +68,9 @@ def POU(x, j, xmins, xmaxs, J):
     w_j = window_hat(x, xmins[j], xmaxs[j])
 
     return w_j / jnp.sum(w_k)
+
+# POU_dx = jax.grad(POU)
+# POU_dxx = jax.grad(POU_dx)
 
 
 def POU_dx(x, j, xmins, xmaxs, J):

@@ -21,15 +21,15 @@ def sin(x):
     return jnp.sin(x)
 
 
-def phi(x, activation, weight, bias, mu, sd): #x values [this doesnt't]
+def phi_old(x, activation, weight, bias, mu, sd): 
     x = activation(jnp.dot(x, weight) + bias)
     return x
 
-def phi_dx(x, activation_dx, weight, bias, mu, sd):
+def phi_dx_old(x, activation_dx, weight, bias, mu, sd):
     x = jnp.dot(activation_dx(jnp.dot(x, weight) + bias), weight)
     return x
 
-def phi_dxx(x, activation_dxx, weight, bias, mu, sd):
+def phi_dxx_old(x, activation_dxx, weight, bias, mu, sd):
     x = jnp.dot(activation_dxx(jnp.dot(x, weight) + bias), jnp.square(weight))
     return x
 
@@ -40,6 +40,22 @@ def phi_dxx(x, activation_dxx, weight, bias, mu, sd):
 #     return x_normalized
 
 # phi_dx = jax.grad(phi)
+
+def phi(x, params_hidden,sigma):
+    for weight, bias in params_hidden:
+        x = sigma(jnp.dot(x, weight) + bias)
+    #x=2*x**2 #For testing the jvps
+    return x
+
+def phi_dx(x,params_hidden, sigma):
+    u_fn = lambda x: phi(x,params_hidden,sigma)
+    _, du = jax.jvp(u_fn, (x,), (jnp.ones_like(x),))
+    return du
+
+def phi_dxx(x,params_hidden, sigma):
+    du_fn = lambda x: phi_dx(x,params_hidden,sigma)
+    _, ddu = jax.jvp(du_fn, (x,), (jnp.ones_like(x),))
+    return ddu
 
 
 def initWeightBiases(nNetworks, layer):

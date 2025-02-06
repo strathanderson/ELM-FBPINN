@@ -18,12 +18,12 @@ import jax.numpy as jnp
 import numpy as np
 import matplotlib.pyplot as plt
 
-from windows import window_hat, window_hat_dx, window_hat_dxx, POU, POU_dx, POU_dxx, initInterval
+from windows import window_hat, window_hat_dx, window_hat_dxx, POU, POU_dx, POU_dxx, initInterval_old
 
 
 def plot_window_hat(J, xmin_global, xmax_global, width, num_points=100):
     x = jnp.linspace(xmin_global, xmax_global, num_points)
-    xmins, xmaxs = initInterval(J, xmin_global, xmax_global, width)
+    xmins, xmaxs = initInterval_old(J, xmin_global, xmax_global, width)
 
     plt.figure(figsize=(8, 6))
     for j in range(J):

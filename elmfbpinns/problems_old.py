@@ -19,12 +19,10 @@ import jax
 import jax.numpy as jnp
 
 from windows import POU, POU_dx, POU_dxx, window_hat, window_hat_dx, window_hat_dxx
-from networks import phi , phi_dx, phi_dxx, phi_old, phi_dx_old, phi_dxx_old
+from networks import phi_old , phi_dx_old, phi_dxx_old
 
 #1D harmonic oscillator
-
-
-def compute_M_entry_vmap(x, j, J, c, basis, basis_dx, basis_dxx,params_hidden, xmins, xmaxs, sigma):
+def compute_M_entry_vmap_old(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
     sigma, sigma_dx, sigma_dxx = sigma, jax.grad(sigma), jax.grad(jax.grad(sigma))
     if J == 1:
         partition_dxx = 0
@@ -46,12 +44,9 @@ def compute_M_entry_vmap(x, j, J, c, basis, basis_dx, basis_dxx,params_hidden, x
     # phi_dx = jax.grad(phi)
     # phi_dxx = jax.grad(phi_dx)
 
-    # basis = phi(x, params_hidden, sigma)
-    # #print(f"basis shape: {basis}")
-    # basis_dx = phi_dx(x, params_hidden, sigma)
-    # #print(f"basis_dx shape: {basis_dx.shape}")
-    # basis_dxx = phi_dxx(x, params_hidden, sigma)
-    #print(f"basis_dxx shape: {basis_dxx.shape}")
+    basis = phi_old(x, sigma, weights[c], biases[c], mu, sd)
+    basis_dx = phi_dx_old(x, sigma_dx, weights[c], biases[c], mu, sd)
+    basis_dxx = phi_dxx_old(x, sigma_dxx, weights[c], biases[c], mu, sd)
 
     u_tt = partition_dxx * basis + 2 * partition_dx * basis_dx + partition * basis_dxx
     u_t = partition_dx * basis + partition * basis_dx
@@ -67,71 +62,28 @@ def compute_M_entry_vmap(x, j, J, c, basis, basis_dx, basis_dxx,params_hidden, x
 
     return entry
 
-def compute_u_value(x, l, j, J, c, basis,basis_dx,basis_dxx,params_hidden, xmins, xmaxs, sigma):
-    if J == 1:
-        partition = 1
-    else:
-        # partition = POU(x[l], j, xmins, xmaxs, J)
-        partition = window_hat(x[l], xmins[j], xmaxs[j])
-        # partition_dx = window_hat_dx(x, xmins[j], xmaxs[j])
-        # partition_dxx = window_hat_dxx(x, xmins[j], xmaxs[j])
-
-    mu = (xmins[j] + xmaxs[j]) / 2.0
-
-    sd = (xmaxs[j] - xmins[j]) / 2.0
-
-    #basis = phi(x,params_hidden,sigma)
-
-    u = partition * basis
-
-    return u
-
-
-def compute_du_value(x, l, j, J,c,basis,basis_dx,basis_dxx, params_hidden, xmins, xmaxs, sigma):
-    POU_derivative = jax.grad(POU)
-    if J == 1:
-        partition_dx = 0
-        partition = 1
-    else:
-        # partition = POU(x[l], j, xmins, xmaxs, J)
-        # partition_dx = POU_dx(x[l], j, xmins, xmaxs, J)
-        
-        partition = window_hat(x[l], xmins[j], xmaxs[j])
-        partition_dx = window_hat_dx(x[l], xmins[j], xmaxs[j])
-        # partition_dxx = window_hat_dxx(x, xmins[j], xmaxs[j])
-
-    mu = (xmins[j] + xmaxs[j]) / 2.0
-
-    sd = (xmaxs[j] - xmins[j]) / 2.0
-
-    # basis = phi(x,params_hidden,sigma)
-    # basis_dx = phi_dx(x,params_hidden,sigma)
-
-    u_t = partition_dx * basis + partition * basis_dx
-    return u_t
-
-def compute_u_value_vmap(x, j, J, c, basis,basis_dx,basis_dxx, params_hidden, xmins, xmaxs, sigma):
+def compute_u_value_vmap_old(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
     sigma, sigma_dx, sigma_dxx = sigma, jax.grad(sigma), jax.grad(jax.grad(sigma))
     if J == 1:
         partition = 1
     else:
         # partition = POU(x, j, xmins, xmaxs, J)
         partition = window_hat(x, xmins[j], xmaxs[j])
-        # partition_dx = window_hat_dx(x, xmins[j], xmaxs[j])
-        # partition_dxx = window_hat_dxx(x, xmins[j], xmaxs[j])
+        partition_dx = window_hat_dx(x, xmins[j], xmaxs[j])
+        partition_dxx = window_hat_dxx(x, xmins[j], xmaxs[j])
 
     mu = (xmins[j] + xmaxs[j]) / 2.0
 
     sd = (xmaxs[j] - xmins[j]) / 2.0
 
-    #basis = phi_old(x, sigma, weights[c], biases[c], mu, sd)
+    basis = phi_old(x, sigma, weights[c], biases[c], mu, sd)
 
     u = partition * basis
 
     return u
 
 
-def compute_du_value_vmap(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
+def compute_du_value_vmap_old(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
     sigma, sigma_dx, sigma_dxx = sigma, jax.grad(sigma), jax.grad(jax.grad(sigma))
     POU_derivative = jax.grad(POU)
     if J == 1:
@@ -142,13 +94,13 @@ def compute_du_value_vmap(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
         # partition_dx = POU_derivative(x, j, xmins, xmaxs, J)
         partition = window_hat(x, xmins[j], xmaxs[j])
         partition_dx = window_hat_dx(x, xmins[j], xmaxs[j])
-        # partition_dxx = window_hat_dxx(x, xmins[j], xmaxs[j])
+        partition_dxx = window_hat_dxx(x, xmins[j], xmaxs[j])
 
     mu = (xmins[j] + xmaxs[j]) / 2.0
 
     sd = (xmaxs[j] - xmins[j]) / 2.0
 
-    basis = phi(x, sigma, weights[c], biases[c], mu, sd)
+    basis = phi_old(x, sigma, weights[c], biases[c], mu, sd)
     phi_dx = jax.grad(phi_old)
     basis_dx = phi_dx(x, sigma, weights[c], biases[c], mu, sd)
     #print("Yes I changed")
@@ -158,10 +110,54 @@ def compute_du_value_vmap(x, j, J, c, weights, biases, xmins, xmaxs, sigma):
 
     return u_t
 
-
-
 #functions for boundary condition
+def compute_u_value_old(x, l, j, J, c, weights, biases, xmins, xmaxs, sigma):
+    if J == 1:
+        partition = 1
+    else:
+        partition_POU = POU(x[l], j, xmins, xmaxs, J)
+        #print(f"partition POU shape: {partition_POU.shape}")
+        partition = window_hat(x[l], xmins[j], xmaxs[j])
+        #print(f"partition window shape: {partition.shape}")
+        partition_dx = window_hat_dx(x[l], xmins[j], xmaxs[j])
+        partition_dxx = window_hat_dxx(x[l], xmins[j], xmaxs[j])
 
+    mu = (xmins[j] + xmaxs[j]) / 2.0
+
+    sd = (xmaxs[j] - xmins[j]) / 2.0
+
+    basis = phi_old(x[l], sigma, weights[c], biases[c], mu, sd)
+
+    u = partition * basis
+
+    return u
+
+
+def compute_du_value_old(x, l, j, J, c, weights, biases, xmins, xmaxs, sigma):
+    POU_derivative = jax.grad(POU)
+    if J == 1:
+        partition_dx = 0
+        partition = 1
+    else:
+        # partition = POU(x[l], j, xmins, xmaxs, J)
+        # partition_dx = POU_derivative(x[l], j, xmins, xmaxs, J)
+        
+        partition = window_hat(x[l], xmins[j], xmaxs[j])
+        partition_dx = window_hat_dx(x[l], xmins[j], xmaxs[j])
+        partition_dxx = window_hat_dxx(x[l], xmins[j], xmaxs[j])
+
+    mu = (xmins[j] + xmaxs[j]) / 2.0
+
+    sd = (xmaxs[j] - xmins[j]) / 2.0
+    
+    #sigma_dx = jax.grad(sigma)
+    phi_derivative = jax.grad(phi_old)
+
+    basis = phi_old(x[l], sigma, weights[c], biases[c], mu, sd)
+    basis_dx = phi_derivative(x[l], sigma, weights[c], biases[c], mu, sd)
+
+    u_t = partition_dx * basis + partition * basis_dx
+    return u_t
 
 # Damped Harmonic Oscillator parameters
 m = 1

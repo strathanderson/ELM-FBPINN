@@ -6,7 +6,7 @@ Functions used to define the subdomain intervals, window functions, and POU func
 import jax.numpy as jnp
 from utils import display_windows
 
-def initInterval(J, xmin, xmax, width=1.9, verbose=False):
+def initInterval_old(J, xmin, xmax, width=1.9, verbose=False):
     sd = (xmax - xmin) / J
     xc = jnp.linspace(xmin, xmax, J)
     xmins = xc - width * sd
@@ -14,6 +14,15 @@ def initInterval(J, xmin, xmax, width=1.9, verbose=False):
     if verbose:
         display_windows(xmins, xmaxs)
     return xmins, xmaxs
+
+def initInterval(nSubdomains, xmin, xmax, width=1.9, verbose=False):
+    sd = (xmax - xmin) / nSubdomains
+    xc = jnp.linspace(xmin, xmax, nSubdomains)
+    xmins = xc - width*sd
+    xmaxs = xc + width*sd
+    if verbose:
+        display_windows(xmins, xmaxs)
+    return jnp.stack([xmins, xmaxs], axis=-1)
 
 def norm(mu, sd, x):
     return (x-mu)/sd

@@ -84,36 +84,40 @@ def elmfbpinn_old(
     biases=None,
     lmda=1,
     plot_window=True,
+    debug=False,
 ):
     total_start_time = time.time()  # Start time for the entire function
-    print(f"Total start time: {total_start_time}")
+    #print(f"Total start time: {total_start_time}")
 
     if weights is None:
         weights = random.uniform(w_key, shape=(C,), minval=-R, maxval=R)  # shape=(C,) (32,)
-        print(f"weights: {weights}")
         biases = random.uniform(b_key, shape=(C,), minval=-R, maxval=R)
+    
+    if debug:    
+        print(f"weights: {weights}")
         print(f"biases: {biases}")
 
     xmins, xmaxs = initInterval_old(J, xmin, xmax, width=width, verbose=False)
-    print(f"xmins: {xmins}")
-    print(f"xmaxs: {xmaxs}")
+    if debug:
+        print(f"xmins: {xmins}")
+        print(f"xmaxs: {xmaxs}")
 
     if plot_window:
         plot_window_hat(J, xmin, xmax, width)
 
     x_train = jnp.linspace(xmin, xmax, n_train)
-    print(f"x_train range: {x_train[0]} to {x_train[-1]}")
+    #print(f"x_train range: {x_train[0]} to {x_train[-1]}")
 
     # Generate indices for non-zero entries
     rows, columns = generate_indices(J, C, xmins, xmaxs, x_train)
-    print(f"rows shape: {rows.shape}, columns shape: {columns.shape}")
-    print(f"First few rows indices: {rows[:5]}")
-    print(f"First few columns indices: {columns[:5]}")
+        #print(f"rows shape: {rows.shape}, columns shape: {columns.shape}")
+        #print(f"First few rows indices: {rows[:5]}")
+        #print(f"First few columns indices: {columns[:5]}")
 
     print("Creating M_ode...")
     start_time = time.time()
     M_values = vectorized_matrix_entry_old(rows, columns, x_train, J, C, weights, biases, xmins, xmaxs, sigma, compute_M_entry_vmap_old)
-    print(f"M_values shape: {M_values.shape}")
+        #  print(f"M_values shape: {M_values.shape}")
 
     # Scale the values
     M_values_scaled = M_values / jnp.max(jnp.abs(M_values))
@@ -138,16 +142,19 @@ def elmfbpinn_old(
         du_val = compute_du_value_old(
             x_train, 0, j, J, c, weights, biases, xmins, xmaxs, sigma
         )
-        jax.debug.print("u_val: {u_val}, du_val: {du_val}", u_val=u_val, du_val=du_val)
+        
         return u_val, du_val
+    
+    if debug:
+        jax.debug.print("u_val: {u_val}, du_val: {du_val}", u_val=u_val, du_val=du_val)
 
     start_time = time.time()
     vmap_B_train_entry = jax.vmap(
         jax.vmap(single_B_train_entry, in_axes=(None, 0)), in_axes=(0, None)
     )
     u_vals, du_vals = vmap_B_train_entry(jnp.arange(J), jnp.arange(C))
-    print(f"u_vals shape: {u_vals.shape}")
-    print(f"du_vals shape: {du_vals.shape}")
+        #print(f"u_vals shape: {u_vals.shape}")
+        #print(f"du_vals shape: {du_vals.shape}")
 
     B_train = B_train.at[0].set(u_vals.reshape(J * C))
     B_train = B_train.at[1].set(du_vals.reshape(J * C))
@@ -168,8 +175,8 @@ def elmfbpinn_old(
         M_ode_sparse, B_ode_scaled, lmda, exact_solution, g_train
     )
     print(f"a calculated in {time.time() - start_time:.2f} seconds.")
-    print(f"a shape: {a.shape}")
-    print(f"First few values of a: {a[:5]}")
+    # print(f"a shape: {a.shape}")
+    # print(f"First few values of a: {a[:5]}")
 
     x_test = jnp.linspace(xmin, xmax, n_test)
 

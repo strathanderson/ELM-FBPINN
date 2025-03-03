@@ -27,31 +27,53 @@ from networks import phi, phi_dx, phi_dxx
 
 # C - output basis functions
 
-def generate_indices(J, C, xmins, xmaxs, x):
-    row_indices = []
-    col_indices = []
+# def generate_indices(J, C, xmins, xmaxs, x):
+#     row_indices = []
+#     col_indices = []
 
-    J_array = jnp.arange(J)
-    C_array = jnp.arange(C)
+#     J_array = jnp.arange(J)
+#     C_array = jnp.arange(C)
 
-    #find where the values should exist
-    def condition_check(x, j,c):
-        condition = jnp.logical_and(x >= xmins[j], x <= xmaxs[j])
-        # condition = (jnp.all(condition,0))
-        return jnp.where(
-            condition,
-            1,
-            0,
-            )
+#     #find where the values should exist
+#     def condition_check(x, j,c):
+#         condition = jnp.logical_and(x >= xmins[j], x <= xmaxs[j])
+#         # condition = (jnp.all(condition,0))
+#         return jnp.where(
+#             condition,
+#             1,
+#             0,
+#             )
     
-    #vmap over the x values, j values, and c values
-    vmap_condition_check = jax.vmap(jax.vmap(jax.vmap(condition_check, in_axes=(None, None, 0)), in_axes=(None, 0, None)), in_axes=(0, None, None))
-    result = vmap_condition_check(x, J_array, C_array)
+#     #vmap over the x values, j values, and c values
+#     vmap_condition_check = jax.vmap(jax.vmap(jax.vmap(condition_check, in_axes=(None, None, 0)), in_axes=(None, 0, None)), in_axes=(0, None, None))
+#     result = vmap_condition_check(x, J_array, C_array)
     
-    result = result.reshape((x.shape[0], J * C)) #reshape the result to match the shape of M_ode, #needs altered for higher dimensions
+#     result = result.reshape((x.shape[0], J * C)) #reshape the result to match the shape of M_ode, #needs altered for higher dimensions
 
-    row_indices, col_indices= jnp.nonzero(result) #finds where the values should exist
+#     row_indices, col_indices= jnp.nonzero(result) #finds where the values should exist
     
+#     return row_indices, col_indices
+
+def generate_indices(C, xmins, xmaxs, x):
+    """
+    Generates row and column indices and col_ptrs for a CSC matrix format, based on which points in x fall
+    within the ranges defined by xmins and xmaxs for each subdomain (j, c).
+    """
+    # Expand x, xmins, and xmaxs to perform the full batch condition check
+    x_expanded = jnp.expand_dims(x, 1)  # (n, 1), for broadcasting
+    xmins_expanded = jnp.expand_dims(xmins, 0)  # (1, J), for broadcasting
+    xmaxs_expanded = jnp.expand_dims(xmaxs, 0)  # (1, J), for broadcasting
+
+    # Condition check across the full batch
+    inside = (x_expanded >= xmins_expanded) & (x_expanded <= xmaxs_expanded)  # (n, J) - Return True if x is within J subdomain
+    inside = jnp.repeat(inside, C, axis=1)  # Repeat J times for each C subdomain to get (n, J * C) - Copy the boolean results for each C within each J
+
+    # Find indices where the condition is True
+    row_indices, col_indices = jnp.nonzero(inside)
+
+    # Stack indices for output
+    indices = jnp.stack([row_indices, col_indices], axis=1)
+
     return row_indices, col_indices
 
 
@@ -125,7 +147,7 @@ def elmfbpinn(
         print(f"x_train range: {x_train[0]} to {x_train[-1]}")
 
     # Generate indices for non-zero entries
-    rows, columns = generate_indices(J, C, xmins, xmaxs, x_train)
+    rows, columns = generate_indices(C, xmins, xmaxs, x_train)
     if debug:
         print(f"rows shape: {rows.shape}, columns shape: {columns.shape}")
         print(f"First few rows indices: {rows[:5]}")

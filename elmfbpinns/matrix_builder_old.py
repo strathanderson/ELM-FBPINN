@@ -120,6 +120,7 @@ def elmfbpinn_old(
         print(f"biases: {biases}")
 
     xmins, xmaxs = initInterval_old(J, xmin, xmax, width=width, verbose=False)
+    
     if debug:
         print(f"xmins: {xmins}")
         print(f"xmaxs: {xmaxs}")
@@ -164,11 +165,10 @@ def elmfbpinn_old(
         du_val = compute_du_value_old(
             x_train, 0, j, J, c, weights, biases, xmins, xmaxs, sigma
         )
-        
+
         return u_val, du_val
     
-    if debug:
-        jax.debug.print("u_val: {u_val}, du_val: {du_val}", u_val=u_val, du_val=du_val)
+    
 
     start_time = time.time()
     vmap_B_train_entry = jax.vmap(

@@ -31,21 +31,20 @@ def solve_system(M, f_x):
     return a, loss, elapsed_time
 
 
-def solve_system_with_BCs(M_csc, B, lmda, f, g):
+def least_squares_solver(M_csc, B, lmda, f, g):
 
     start_time = time.time()
     
     # M_csc = sp.csc_matrix(M)
     B_csc = sp.csc_matrix(B)
+
     LHS = M_csc.T @ M_csc + lmda * B_csc.T @ B_csc
-    # print(f"LHS shape: {LHS.shape}")
-    RHS = M_csc.T @ f.ravel() + lmda * B_csc.T @ g
-    # print("M_csc.T.shape: ", M_csc.T.shape)
-    # print("f.ravel().shape: ", f.ravel().shape)
-    # print("lmda: ", lmda)
-    # print("B_csc.T.shape: ", B_csc.T.shape)
-    # print("g.shape: ", g.shape)
-    # print(f"RHS shape: {RHS.shape}")
+    print(f"LHS.shape: {LHS.shape}")
+    print(f"LHS: {LHS.toarray()}")
+    print(f"LHS condition number: {np.linalg.cond(LHS.toarray())}")
+    RHS = M_csc.T @ f + lmda * B_csc.T @ g
+    print(f"RHS.shape: {RHS.shape}")
+    print(f"RHS: {RHS}")
 
     start_time = time.time()
     a = splinalg.spsolve(LHS, RHS)

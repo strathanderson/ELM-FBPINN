@@ -42,17 +42,20 @@ def phi_dxx_old(x, activation_dxx, weight, bias, mu, sd):
 # phi_dx = jax.grad(phi)
 
 def phi(x, params_hidden,sigma):
+    x = x.reshape(-1,1)
     for weight, bias in params_hidden:
         x = sigma(jnp.dot(x, weight) + bias)
     #x=2*x**2 #For testing the jvps
     return x
 
 def phi_dx(x,params_hidden, sigma):
+    x = x.reshape(-1,1)
     u_fn = lambda x: phi(x,params_hidden,sigma)
     _, du = jax.jvp(u_fn, (x,), (jnp.ones_like(x),))
     return du
 
 def phi_dxx(x,params_hidden, sigma):
+    x = x.reshape(-1,1)
     du_fn = lambda x: phi_dx(x,params_hidden,sigma)
     _, ddu = jax.jvp(du_fn, (x,), (jnp.ones_like(x),))
     return ddu

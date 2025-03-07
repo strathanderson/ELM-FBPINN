@@ -133,8 +133,8 @@ def plot_POU_dxx(J, global_xmin, global_xmax):
 def plot_solution(x, u, f_solution, title):
 
     plt.figure(figsize=(10, 6))
-    plt.plot(x, u, label="Solution u", marker="o")
-    plt.plot(x, f_solution, label="Function f(x)", marker="x")
+    plt.plot(x, u, label="Predicted solution", marker="o")
+    plt.plot(x, f_solution, label="Exact Solution", marker="x")
     plt.title(f"{title}")
     plt.xlabel("x")
     plt.ylabel("Value")

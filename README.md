@@ -10,8 +10,8 @@ pip install -r requirements.txt
 ```
 
 2. Navigate to the relevant directory:
-   ```bash
-   cd ELM-FBPINN
-   ```
+```bash
+cd ELM-FBPINN
+```
 
 3. Open "Example.ipynb". 

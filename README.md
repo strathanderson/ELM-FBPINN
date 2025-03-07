@@ -1,3 +1,5 @@
+## ELM-FBPINN - Efficient Finite-basis Physics-informed Neural Networks.
+
 This repository allows the user to implement ELM-FBPINN for a simple 1D Harmonic Oscillator problem. While it can be adapted to different problems, the user has to update the specific functions.
 
 1. Clone the repository:

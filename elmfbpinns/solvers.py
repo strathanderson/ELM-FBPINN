@@ -39,12 +39,12 @@ def least_squares_solver(M_csc, B, lmda, f, g):
     B_csc = sp.csc_matrix(B)
 
     LHS = M_csc.T @ M_csc + lmda * B_csc.T @ B_csc
-    print(f"LHS.shape: {LHS.shape}")
-    print(f"LHS: {LHS.toarray()}")
-    print(f"LHS condition number: {np.linalg.cond(LHS.toarray())}")
+    # print(f"LHS.shape: {LHS.shape}")
+    # print(f"LHS: {LHS.toarray()}")
+    # print(f"LHS condition number: {np.linalg.cond(LHS.toarray())}")
     RHS = M_csc.T @ f + lmda * B_csc.T @ g
-    print(f"RHS.shape: {RHS.shape}")
-    print(f"RHS: {RHS}")
+    # print(f"RHS.shape: {RHS.shape}")
+    # print(f"RHS: {RHS}")
 
     start_time = time.time()
     a = splinalg.spsolve(LHS, RHS)

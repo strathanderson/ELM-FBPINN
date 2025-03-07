@@ -30,7 +30,7 @@ def display_windows(xmins, xmaxs):
 #loss functions
 def calc_l1_loss(u, f_x):
     loss = jnp.mean(jnp.abs(f_x - u)).item()
-    print(f"Loss Value: {loss:.2e}")
+    # print(f"Loss Value: {loss:.2e}")
     return loss
 
 

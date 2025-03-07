@@ -13,6 +13,47 @@ import jax.numpy as jnp
 import jax.random as random
 import optax
 
+def initWeightBiases(nSubdomains, layer,R=None):
+    params_hidden = []  # To store hidden layer parameters
+    for i in range(len(layer) - 2):  # Loop through hidden layers only
+        key = random.PRNGKey(i)
+        w_key_hidden, b_key_hidden, key = random.split(key, 3)
+        
+        # Calculate weight initialization scale
+        if R is None: # He initialization
+            v = jnp.sqrt(2. / (layer[i] + layer[i + 1]))
+            #jax.debug.print("hidden v: {v}",v=v)
+            W = random.uniform(w_key_hidden, (layer[i], layer[i + 1]), minval=-v, maxval=v)
+            b = random.uniform(b_key_hidden, (layer[i + 1],), minval=-v, maxval=v)
+            
+        else: # Random initialization
+            key = random.PRNGKey(0)
+            w_key_hidden, b_key_hidden, key = random.split(key, 3)
+            W = random.uniform(w_key_hidden, (layer[i], layer[i + 1]), minval=-R, maxval=R)
+            b = random.uniform(b_key_hidden, (layer[i + 1],), minval=-R, maxval=R)
+        
+        params_hidden.append((W, b))
+    
+    # Output layer (unique weights and biases for each subdomain)
+    key = random.PRNGKey(len(layer) - 2)  # Ensure a new key for the output layer
+    w_key, b_key, key = random.split(key, 3)
+    
+    if R is None: 
+        v = jnp.sqrt(2. / (layer[-2] + layer[-1]))
+        #jax.debug.print("outer v: {v}",v=v)
+        W_out = random.uniform(w_key, (nSubdomains, layer[-2], layer[-1]), minval=-v, maxval=v)
+        b_out = random.uniform(b_key, (nSubdomains, layer[-1]), minval=-v, maxval=v)
+    
+    else:
+        key = random.PRNGKey(0)
+        w_key_out, b_key_out, key = random.split(key, 3)
+        W_out = random.uniform(w_key, (nSubdomains, layer[-2], layer[-1]), minval=-R, maxval=R)
+        b_out = random.uniform(b_key, (nSubdomains, layer[-1]), minval=-R, maxval=R)
+    
+    params_out = (W_out, b_out)
+    
+    return params_hidden, params_out, w_key_hidden, b_key_hidden
+
 #Activation functions
 def tanh(x):
     return jnp.tanh(x)
@@ -61,7 +102,7 @@ def phi_dxx(x,params_hidden, sigma):
     return ddu
 
 
-def initWeightBiases(nNetworks, layer):
+def initWeightBiases_old(nNetworks, layer):
     params = []
     for i in range(len(layer) - 1):
         key = random.PRNGKey(i)

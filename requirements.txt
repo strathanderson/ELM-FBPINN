@@ -1,0 +1,9 @@
+jax
+jaxlib
+numpy
+pandas
+openpyxl
+scipy
+matplotlib
+optax
+tqdm

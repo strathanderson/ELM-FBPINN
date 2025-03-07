@@ -83,7 +83,7 @@ def vectorized_matrix_entry_old(rows, columns, x_batch, J, C, weights, biases, x
         return entry_value
 
     values = jax.vmap(single_M_entry)(jnp.arange(rows.shape[0]))
-    jax.debug.print("Values shape: {values}", values=values.shape)
+
     return values
 
 def elmfbpinn_old(
@@ -102,8 +102,8 @@ def elmfbpinn_old(
     # key,
     # w_key,
     # b_key,
-    weights=None,
-    biases=None,
+    w_key=None,
+    b_key=None,
     lmda=1,
     plot_window=True,
     debug=False,
@@ -111,72 +111,84 @@ def elmfbpinn_old(
     total_start_time = time.time()  # Start time for the entire function
     #print(f"Total start time: {total_start_time}")
 
-    if weights is None:
+    if w_key is None:
         key = random.PRNGKey(0)
-        w_key, b_key = random.split(key)
-        weights = random.uniform(w_key, shape=(C,), minval=-R, maxval=R)  # shape=(C,) (32,)
+        temp_w_key, temp_b_key = random.split(key)
+        weights = random.uniform(temp_w_key, shape=(C,), minval=-R, maxval=R) 
+        biases = random.uniform(temp_b_key, shape=(C,), minval=-R, maxval=R)
+    else:
+        weights = random.uniform(w_key, shape=(C,), minval=-R, maxval=R)
         biases = random.uniform(b_key, shape=(C,), minval=-R, maxval=R)
-    
-    print("====================================")
-    print(f"Weights shapes: {weights.shape}")
-    print(f"Weights: {weights}")
-    print(f"Biases shapes: {biases.shape}")
-    print(f"Biases: {biases}")
+        
+    if debug:
+        print("====================================")
+        print(f"Weights shapes: {weights.shape}")
+        print(f"Weights: {weights}")
+        print(f"Biases shapes: {biases.shape}")
+        print(f"Biases: {biases}")
 
     xmins, xmaxs = initInterval_old(J, xmin, xmax, width=width, verbose=False)
-    print("====================================")
-    print(f"xmins: {xmins}")
-    print(f"xmaxs: {xmaxs}")
+    if debug:
+        print("====================================")
+        print(f"xmins: {xmins}")
+        print(f"xmaxs: {xmaxs}")
 
-    print("====================================")
-    print(f"Number of neurons C: {C}")
+        print("====================================")
+        print(f"Number of neurons C: {C}")
 
     if plot_window:
         plot_window_hat(J, xmin, xmax, width)
 
     x_train = jnp.linspace(xmin, xmax, n_train)
-    print("====================================")
-    print(f"x_train shape: {x_train.shape}")
-    print(f"First few x_train values: {x_train[:5]}")
+    if debug:
+        print("====================================")
+        print(f"x_train shape: {x_train.shape}")
+        print(f"First few x_train values: {x_train[:5]}")
 
     # Generate indices for non-zero entries
     rows, columns = generate_indices(J, C, xmins, xmaxs, x_train)
-    print("====================================")
-    print(f"rows shape: {rows.shape}, columns shape: {columns.shape}")
-    print(f"First few rows indices: {rows[:5]}")
-    print(f"First few columns indices: {columns[:5]}")
+    if debug:
+        print("====================================")
+        print(f"rows shape: {rows.shape}, columns shape: {columns.shape}")
+        print(f"First few rows indices: {rows[:5]}")
+        print(f"First few columns indices: {columns[:5]}")
 
     print("Creating M_ode...")
     start_time = time.time()
     M_values = vectorized_matrix_entry_old(rows, columns, x_train, J, C, weights, biases, xmins, xmaxs, sigma, compute_M_entry_vmap_old)
-    print("====================================")
-    print(f"M_values shape: {M_values.shape}")
-    print(f"Max of M_values before scaling: {jnp.max(M_values)}")
-    print(f"First few values of M_values: {M_values[:5]}")
+    if debug:
+        print("====================================")
+        print(f"M_values shape: {M_values.shape}")
+        print(f"Max of M_values before scaling: {jnp.max(M_values)}")
+        print(f"First few values of M_values: {M_values[:5]}")
 
     # Scale the values
     M_values_scaled = M_values / jnp.max(jnp.abs(M_values))
-    print("====================================")
-    print(f"M_values_scaled shape: {M_values_scaled.shape}")
-    print(f"Max of M_values_scaled: {jnp.max(M_values_scaled)}")
-    print(f"First few values of M_values_scaled: {M_values_scaled[:5]}")
+    if debug:
+        print("====================================")
+        print(f"M_values_scaled shape: {M_values_scaled.shape}")
+        print(f"Max of M_values_scaled: {jnp.max(M_values_scaled)}")
+        print(f"First few values of M_values_scaled: {M_values_scaled[:5]}")
 
     # Create the sparse matrix using row and column indices
     M_ode_sparse = scipy.sparse.csc_matrix((M_values_scaled, (rows, columns)), shape=(n_train, J * C))
-    print("====================================")
-    print(f"M_ode_sparse shape: {M_ode_sparse.shape}")
-    print(f"M_ode_sparse non-zero entries: {M_ode_sparse.nnz}")
+    if debug:
+        print("====================================")
+        print(f"M_ode_sparse shape: {M_ode_sparse.shape}")
+        print(f"M_ode_sparse non-zero entries: {M_ode_sparse.nnz}")
     print(f"M_ode created in {time.time() - start_time:.2f} seconds.")
 
     # Exact solution
     exact_solution = RHS_func(x_train) / jnp.max(jnp.abs(M_values))
-    print("====================================")
-    print(f"exact_solution shape: {exact_solution.shape}")
-    print(f"First few values of exact_solution: {exact_solution[:5]}")
-    print("Exact_solution scaled.")
+    if debug:
+        print("====================================")
+        print(f"exact_solution shape: {exact_solution.shape}")
+        print(f"First few values of exact_solution: {exact_solution[:5]}")
+        print("Exact_solution scaled.")
 
     # Initialize and compute B_train
-    print("====================================")
+    if debug:
+        print("====================================")
     print("Creating B_train...")
     B_train = jnp.zeros((2, J * C))
 
@@ -197,58 +209,65 @@ def elmfbpinn_old(
         jax.vmap(single_B_train_entry, in_axes=(None, 0)), in_axes=(0, None)
     )
     u_vals, du_vals = vmap_B_train_entry(jnp.arange(J), jnp.arange(C))
-    print(f"u_vals shape: {u_vals.shape}")
-    print(f"first few u_vals: {u_vals[:5]}")
-    print(f"du_vals shape: {du_vals.shape}")
-    print(f"first few du_vals: {du_vals[:5]}")
+    if debug:
+        print(f"u_vals shape: {u_vals.shape}")
+        print(f"first few u_vals: {u_vals[:5]}")
+        print(f"du_vals shape: {du_vals.shape}")
+        print(f"first few du_vals: {du_vals[:5]}")
 
     B_train = B_train.at[0].set(u_vals.reshape(J * C))
     B_train = B_train.at[1].set(du_vals.reshape(J * C))
     print(f"B_train created in {time.time() - start_time:.2f} seconds.")
 
     # Scaling B_train
-    print("====================================")
-    print(f"B_train shape: {B_train.shape}")
-    print(f"B_train max value before scaling: {jnp.max(B_train)}")
-    print(f"First few values of B_train: {B_train[:5]}")
+    if debug:
+        print("====================================")
+        print(f"B_train shape: {B_train.shape}")
+        print(f"B_train max value before scaling: {jnp.max(B_train)}")
+        print(f"First few values of B_train: {B_train[:5]}")
 
     BD = jnp.diag(1.0 / jnp.max(jnp.abs(B_train), axis=1))
     B_ode_scaled = BD @ B_train
 
-    print("====================================")
-    print("B_train scaled")
-    print(f"B_train scaled shape: {B_ode_scaled.shape}")
-    print(f"B_train scaled max value: {jnp.max(B_ode_scaled)}")
-    print(f"First few values of B_train scaled: {B_ode_scaled[:5]}")
+    if debug:
+        print("====================================")
+        print("B_train scaled")
+        print(f"B_train scaled shape: {B_ode_scaled.shape}")
+        print(f"B_train scaled max value: {jnp.max(B_ode_scaled)}")
+        print(f"First few values of B_train scaled: {B_ode_scaled[:5]}")
 
     # Boundary conditions
     g_train = jnp.zeros(2)
     g_train = BD @ g_train.at[0].set(1) #Fix this later
-    print("====================================")
-    print("g_train created")
-    print(f"g_train values: {g_train}")
+    if debug:
+        print("====================================")
+        print("g_train created")
+        print(f"g_train values: {g_train}")
 
     # Solve the system with boundary conditions
     start_time = time.time()
     a, elapsed_time, lhs_condition = least_squares_solver(
         M_ode_sparse, B_ode_scaled, lmda, exact_solution, g_train
     )
-    print("====================================")
-    print(f"a calculated in {time.time() - start_time:.2f} seconds.")
-    print(f"a shape: {a.shape}")
-    print(f"First few values of a: {a[:5]}")
-    print(f"Final 5 values of a: {a[-5:]}")
+    if debug:
+        print("====================================")
+        print(f"a calculated in {time.time() - start_time:.2f} seconds.")
+        print(f"a shape: {a.shape}")
+        print(f"First few values of a: {a[:5]}")
+        print(f"Final 5 values of a: {a[-5:]}")
 
     x_test = jnp.linspace(xmin, xmax, n_test)
-    print("====================================")
+    if debug:
+        print("====================================")
     print("Creating M_sol...")
     start_time = time.time()
     rows, columns = generate_indices(J, C, xmins, xmaxs, x_test)
 
     M_sol = vectorized_matrix_entry_old(rows, columns, x_test, J, C, weights, biases, xmins, xmaxs, sigma, compute_u_value_vmap_old)
     M_sol_sparse = scipy.sparse.csc_matrix((M_sol, (rows, columns)), shape=(x_test.shape[0], J * C))
-    print(f"M_sol shape: {M_sol.shape}")
-    print(f"M_sol values created. Max value: {jnp.max(M_sol)}")
+    if debug:
+        print(f"M_sol shape: {M_sol.shape}")
+        print(f"M_sol values created. Max value: {jnp.max(M_sol)}")
     print(f"M_sol created in {time.time() - start_time:.2f} seconds.")
 
     u_test = M_sol_sparse @ a
@@ -260,9 +279,9 @@ def elmfbpinn_old(
     u_exact = u(x_test)
 
     u_exact = u(x_test)
-    # if debug:
-    print(f"First few values of u_exact: {u_exact[:5]}")
-    print(f"First few values of u_test: {u_test[:5]}")
+    if debug:
+        print(f"First few values of u_exact: {u_exact[:5]}")
+        print(f"First few values of u_test: {u_test[:5]}")
 
     # Plot the solution and print results.
     test_loss = calc_l1_loss(u_test, u_exact)

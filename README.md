@@ -16,4 +16,7 @@ pip install -r requirements.txt
 cd ELM-FBPINN
 ```
 
-3. Open "Example.ipynb". 
+3. Open "Example.ipynb".
+```bash
+code elmfbpinns/Example.ipynb
+```

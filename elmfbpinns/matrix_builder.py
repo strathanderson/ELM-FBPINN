@@ -110,6 +110,8 @@ def vectorized_matrix_entry(rows, columns, x_batch, J, C, basis, basis_dx, basis
 
 
 def elmfbpinn(
+    u_0,
+    u_1,
     RHS_func,
     u,
     n_train,
@@ -263,7 +265,7 @@ def elmfbpinn(
 
     # Solve the system with boundary conditions
     start_time = time.time()
-    a, elapsed_time, lhs_condition = least_squares_solver(
+    a, elapsed_time, lhs_condition, training_loss, full_training_loss = least_squares_solver(
         M_ode_sparse, B_ode_scaled, lmda, exact_solution, g_train
     )
     if debug:
@@ -292,7 +294,7 @@ def elmfbpinn(
     print(f"M_sol created in {time.time() - start_time:.2f} seconds.")
 
     u_test = M_sol_sparse @ a
-    u_exact = u(x_test).flatten()
+    u_exact = u(u_0,u_1,x_test).flatten()
 
     #print(f"u_test shape: {u_test.shape}")
     if debug:
@@ -304,13 +306,17 @@ def elmfbpinn(
     test_loss = calc_l1_loss(u_test, u_exact)
     print(f"Test Loss Value: {test_loss:.2e}")
 
+    print(f"x_test shape: {x_test.shape}")
+    print(f"u_test shape: {u_test.shape}")
+    print(f"u_exact shape: {u_exact.shape}")
+
     plot_solution(x_test, u_test, u_exact, title)
 
     print(f"Condition number of M_ode_sparse: {jnp.linalg.cond(M_ode_sparse.toarray()):.2e}")
     print(f"Condition number of M_sol_sparse: {jnp.linalg.cond(M_sol_sparse.toarray()):.2e}")
     print(f"Condition number of LHS: {lhs_condition:.2e}")
 
-    loss = [test_loss]
+    loss = [training_loss, full_training_loss,test_loss]
     u = [u_test, u_exact]
     Ms = [M_sol, M_ode_sparse, M_sol_sparse]
     B = [B_train, g_train]

@@ -2,7 +2,7 @@
 Functions that use sparse solvers to solve the linear systems of equations
 """
 
-from utils import calc_normalized_l1_loss
+from utils import calc_normalized_l1_loss, calc_l1_loss
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as splinalg #jax
@@ -25,7 +25,10 @@ def solve_system(M, f_x):
 
     elapsed_time = end_time - start_time
 
-    loss = calc_normalized_l1_loss(a, M, f_x)
+    u_train = M_csc @ a
+    loss = calc_normalized_l1_loss(u_train, f_x)
+
+    print(f"Training loss: {loss:.2e}")
 
     print(f"Time taken for solver: {elapsed_time:.4f} seconds")
     return a, loss, elapsed_time
@@ -52,7 +55,16 @@ def least_squares_solver(M_csc, B, lmda, f, g):
 
     elapsed_time = end_time - start_time
 
+    u_train = (M_csc @ a)
+
+    training_loss = np.linalg.norm(u_train - f, ord=2) ** 2
+
+    full_training_loss = np.linalg.norm(M_csc @ a - f, ord=2) ** 2 + lmda * np.linalg.norm(B_csc @ a - g, ord=2) ** 2
+
+    print(f"Training loss: {training_loss:.2e}")
+    print(f"Full training loss: {full_training_loss:.2e}")
+
     lhs_condition = np.linalg.cond(LHS.toarray())
 
     print(f"Time taken for solver: {elapsed_time:.4f} seconds")
-    return a, elapsed_time, lhs_condition
+    return a, elapsed_time, lhs_condition, training_loss, full_training_loss

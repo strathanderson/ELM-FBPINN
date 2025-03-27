@@ -99,9 +99,6 @@ def elmfbpinn_old(
     width,
     sigma,
     title,
-    # key,
-    # w_key,
-    # b_key,
     w_key=None,
     b_key=None,
     lmda=1,
@@ -246,7 +243,7 @@ def elmfbpinn_old(
 
     # Solve the system with boundary conditions
     start_time = time.time()
-    a, elapsed_time, lhs_condition = least_squares_solver(
+    a, elapsed_time, lhs_condition, training_loss, full_training_loss = least_squares_solver(
         M_ode_sparse, B_ode_scaled, lmda, exact_solution, g_train
     )
     if debug:
@@ -293,7 +290,7 @@ def elmfbpinn_old(
     print(f"Condition number of M_sol_sparse: {jnp.linalg.cond(M_sol_sparse.toarray()):.2e}")
     print(f"Condition Number of LHS: {lhs_condition:.2e}")
 
-    loss = [test_loss]
+    loss = [training_loss,full_training_loss, test_loss]
     u = [u_test, u_exact]
     Ms = [M_sol, M_ode_sparse, M_sol_sparse]
     B = [B_train]

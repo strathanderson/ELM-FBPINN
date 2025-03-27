@@ -4,7 +4,7 @@ This repository allows the user to implement ELM-FBPINN for a simple 1D Harmonic
 
 1. Clone the repository:
 ```bash
-   git clone https://github.com/strathanderson/ELM-FBPINN.git
+git clone https://github.com/strathanderson/ELM-FBPINN.git
 ```
 2. To install the relevant dependencies use:
 ```bash
@@ -16,4 +16,7 @@ pip install -r requirements.txt
 cd ELM-FBPINN
 ```
 
-3. Open "Example.ipynb". 
+3. Open "Example.ipynb".
+```bash
+code elmfbpinns/Example.ipynb
+```
